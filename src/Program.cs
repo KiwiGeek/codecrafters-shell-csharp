@@ -6,6 +6,10 @@ class Program
         {
             Console.Write("$ ");
             string? input = Console.ReadLine();
+            if (input == "exit")
+            {
+                Environment.Exit(0);
+            }
             Console.WriteLine($"{input}: command not found");
         }
     }
