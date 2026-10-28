@@ -1,20 +1,36 @@
 class Program
 {
+
+    internal static IBuiltInCommand[] builtins = [
+        new Exit(),
+        new Echo(),
+        new Type()
+    ];
+
     static void Main()
     {
+
         while (true)
         {
             Console.Write("$ ");
             string input = Console.ReadLine() ?? string.Empty;
-            if (input == "exit")
+            
+            // Split the input into command and arguments
+            string[] args = input.Split(' ');
+            string command = args[0];
+            bool handled = false;
+
+            // try to process built in commands
+            foreach (IBuiltInCommand builtin in builtins)
             {
-                Environment.Exit(0);
+                if (builtin.CommandName.Equals(command, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    builtin.Execute(args[1..]);
+                    handled = true;
+                    break;
+                }
             }
-            else if (input[..5] == "echo ")
-            {
-                Console.WriteLine(input[5..]);
-            }
-            else 
+            if (!handled)
             {
                 Console.WriteLine($"{input}: command not found");
             }
