@@ -12,7 +12,8 @@ internal static class StringExtensions
         InsideSingleQuote,
         InsideDoubleQuote,
         EndOfToken,
-        EndOfInput
+        EndOfInput,
+        NextCharacterLiteral
     }
     
     extension(string value)
@@ -28,6 +29,7 @@ internal static class StringExtensions
             // 3) End of token
             // 4) End of input
             // 5) Inside of Double quote
+            // 6) Next Character Literal
             // 
             // Normal reads the next character, and determines if it's a single quote. if it is, we transition to Inside single quote
             // if it's whitespace, we transition to end of token.
@@ -54,6 +56,10 @@ internal static class StringExtensions
                         if (char.IsWhiteSpace(nextChar))
                         {
                             stateMachine = TokenizerStateMachine.EndOfToken;
+                        }
+                        else if (nextChar.Equals('\\'))
+                        {
+                            stateMachine = TokenizerStateMachine.NextCharacterLiteral;
                         }
                         else if (nextChar.Equals('"'))
                         {
@@ -113,6 +119,11 @@ internal static class StringExtensions
                             results.Add(endOfInputNewToken);
                         }
                         done = true;
+                        break;
+                    case TokenizerStateMachine.NextCharacterLiteral:
+                        stringBuilder.Append(value[index]);
+                        stateMachine = TokenizerStateMachine.Normal;
+                        index++;
                         break;
                     default:
                         throw new InvalidOperationException("Unknown state");
