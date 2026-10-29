@@ -13,7 +13,8 @@ internal static class StringExtensions
         InsideDoubleQuote,
         EndOfToken,
         EndOfInput,
-        NextCharacterLiteral
+        NextCharacterLiteral,
+        DoubleQuoteNextCharacterLiteralMaybe
     }
     
     extension(string value)
@@ -90,7 +91,11 @@ internal static class StringExtensions
                         break;
                     case TokenizerStateMachine.InsideDoubleQuote:
                         char nextCharInDoubleQuote = value[index];
-                        if (nextCharInDoubleQuote.Equals('"'))
+                        if (nextCharInDoubleQuote.Equals('\\'))
+                        {
+                            stateMachine = TokenizerStateMachine.DoubleQuoteNextCharacterLiteralMaybe;
+                        }
+                        else if (nextCharInDoubleQuote.Equals('"'))
                         {
                             stateMachine = TokenizerStateMachine.Normal;
                         }
@@ -123,6 +128,24 @@ internal static class StringExtensions
                     case TokenizerStateMachine.NextCharacterLiteral:
                         stringBuilder.Append(value[index]);
                         stateMachine = TokenizerStateMachine.Normal;
+                        index++;
+                        break;
+                    case TokenizerStateMachine.DoubleQuoteNextCharacterLiteralMaybe:
+                        char nextCharInDoubleQuoteMaybeLiteral = value[index];
+                        if (nextCharInDoubleQuoteMaybeLiteral.Equals('\"'))
+                        {
+                            stringBuilder.Append(nextCharInDoubleQuoteMaybeLiteral);
+                        }
+                        else if (nextCharInDoubleQuoteMaybeLiteral.Equals('\\'))
+                        {
+                            stringBuilder.Append(nextCharInDoubleQuoteMaybeLiteral);
+                        }
+                        else
+                        {
+                            stringBuilder.Append("\\");
+                            stringBuilder.Append(nextCharInDoubleQuoteMaybeLiteral);
+                        }
+                        stateMachine = TokenizerStateMachine.InsideDoubleQuote;
                         index++;
                         break;
                     default:
