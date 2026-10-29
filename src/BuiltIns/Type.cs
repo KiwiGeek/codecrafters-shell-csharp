@@ -1,3 +1,4 @@
+using CodeCrafters.Shell.Classes;
 using CodeCrafters.Shell.Helpers;
 
 namespace CodeCrafters.Shell.BuiltIns;
@@ -6,7 +7,7 @@ internal class Type : IBuiltInCommand
 {
     public string CommandName => "type";
 
-    public void Execute(string[] args)
+    public void Execute(Token[] args)
     {
         if (args.Length < 1)
         {
@@ -14,7 +15,7 @@ internal class Type : IBuiltInCommand
         }
         else if (Program.Builtins.Any(b => b.CommandName == args[0]))
         {
-            Console.WriteLine($"{args[0]} is a shell builtin");
+            Console.WriteLine($"{args[0].Value} is a shell builtin");
         }
         else
         {

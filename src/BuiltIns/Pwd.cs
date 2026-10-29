@@ -1,8 +1,10 @@
-﻿namespace CodeCrafters.Shell.BuiltIns;
+﻿using CodeCrafters.Shell.Classes;
+
+namespace CodeCrafters.Shell.BuiltIns;
 
 internal class Pwd : IBuiltInCommand
 {
-    public void Execute(string[] args)
+    public void Execute(Token[] args)
     {
         Console.WriteLine(Environment.CurrentDirectory);
     }
