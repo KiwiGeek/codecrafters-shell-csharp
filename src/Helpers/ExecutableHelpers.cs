@@ -39,6 +39,8 @@ internal static class ExecutableHelpers
             return File.Exists(path);
         }
         UnixFileMode mode = File.GetUnixFileMode(path);
-        return (mode & UnixFileMode.UserExecute) == UnixFileMode.UserExecute;
+        return (mode & UnixFileMode.UserExecute) == UnixFileMode.UserExecute ||
+               (mode & UnixFileMode.GroupExecute) == UnixFileMode.GroupExecute || 
+               (mode & UnixFileMode.OtherExecute) == UnixFileMode.OtherExecute;
     }
 }

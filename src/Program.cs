@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CodeCrafters.Shell.BuiltIns;
 using Type = CodeCrafters.Shell.BuiltIns.Type;
 
@@ -37,7 +38,23 @@ internal static class Program
             }
             if (!handled)
             {
-                Console.WriteLine($"{input}: command not found");
+                // try to see if it's an executable.
+                string? resolveFromPath = Helpers.ExecutableHelpers.ResolveExecutableFromPath(args[0]);
+                if (resolveFromPath != null)
+                {
+                    // execute the executable with any provided arguments
+                    ProcessStartInfo startInfo = new ()
+                    {
+                        FileName = args[0],
+                        Arguments = string.Join(" ", args[1..]),
+                    };
+                    Process? process = Process.Start(startInfo);
+                    process!.WaitForExit();
+                }
+                else
+                {
+                    Console.WriteLine($"{input}: command not found");
+                }
             }
         }
         // ReSharper disable once FunctionNeverReturns
