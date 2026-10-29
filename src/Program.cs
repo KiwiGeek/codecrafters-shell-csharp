@@ -1,7 +1,12 @@
-class Program
+using CodeCrafters.Shell.BuiltIns;
+using Type = CodeCrafters.Shell.BuiltIns.Type;
+
+namespace CodeCrafters.Shell;
+
+internal static class Program
 {
 
-    internal static IBuiltInCommand[] builtins = [
+    internal static readonly IBuiltInCommand[] Builtins = [
         new Exit(),
         new Echo(),
         new Type()
@@ -21,7 +26,7 @@ class Program
             bool handled = false;
 
             // try to process built in commands
-            foreach (IBuiltInCommand builtin in builtins)
+            foreach (IBuiltInCommand builtin in Builtins)
             {
                 if (builtin.CommandName.Equals(command, StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -35,5 +40,6 @@ class Program
                 Console.WriteLine($"{input}: command not found");
             }
         }
+        // ReSharper disable once FunctionNeverReturns
     }
 }

@@ -1,3 +1,5 @@
+namespace CodeCrafters.Shell.BuiltIns;
+
 internal class Echo : IBuiltInCommand
 {
     public string CommandName => "echo";

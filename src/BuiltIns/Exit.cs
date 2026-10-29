@@ -1,3 +1,5 @@
+namespace CodeCrafters.Shell.BuiltIns;
+
 internal class Exit : IBuiltInCommand
 {
     public string CommandName => "exit";

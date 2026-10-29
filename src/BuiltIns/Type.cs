@@ -1,3 +1,7 @@
+using CodeCrafters.Shell.Helpers;
+
+namespace CodeCrafters.Shell.BuiltIns;
+
 internal class Type : IBuiltInCommand
 {
     public string CommandName => "type";
@@ -7,15 +11,22 @@ internal class Type : IBuiltInCommand
         if (args.Length < 1)
         {
             Console.WriteLine("Usage: type <command>");
-            return;
         }
-        if (Program.builtins.Any(b => b.CommandName == args[0]))
+        else if (Program.Builtins.Any(b => b.CommandName == args[0]))
         {
             Console.WriteLine($"{args[0]} is a shell builtin");
         }
         else
         {
-            Console.WriteLine($"{args[0]}: not found");
+           string? resolveFromPath = ExecutableHelpers.ResolveExecutableFromPath(args[0]);
+           if (resolveFromPath != null)
+           {
+               Console.WriteLine($"{args[0]} is {resolveFromPath}");
+           }
+           else
+           {
+               Console.WriteLine($"{args[0]}: not found");   
+           }
         }
     }
 }
