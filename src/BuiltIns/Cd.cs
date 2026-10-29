@@ -4,6 +4,7 @@ internal class Cd : IBuiltInCommand
 {
     public void Execute(string[] args)
     {
+        if (args[0] == "~") args[0] = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         if (Directory.Exists(args[0]))
         {
             Environment.CurrentDirectory = args[0];
