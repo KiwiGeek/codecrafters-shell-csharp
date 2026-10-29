@@ -10,7 +10,8 @@ internal static class Program
     internal static readonly IBuiltInCommand[] Builtins = [
         new Exit(),
         new Echo(),
-        new Type()
+        new Type(),
+        new Pwd()
     ];
 
     static void Main()
