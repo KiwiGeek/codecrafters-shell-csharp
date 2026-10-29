@@ -11,7 +11,8 @@ internal static class Program
         new Exit(),
         new Echo(),
         new Type(),
-        new Pwd()
+        new Pwd(),
+        new Cd()
     ];
 
     static void Main()
