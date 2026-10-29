@@ -10,6 +10,7 @@ internal static class StringExtensions
     {
         Normal,
         InsideSingleQuote,
+        InsideDoubleQuote,
         EndOfToken,
         EndOfInput
     }
@@ -26,6 +27,7 @@ internal static class StringExtensions
             // 2) inside single quote
             // 3) End of token
             // 4) End of input
+            // 5) Inside of Double quote
             // 
             // Normal reads the next character, and determines if it's a single quote. if it is, we transition to Inside single quote
             // if it's whitespace, we transition to end of token.
@@ -53,6 +55,10 @@ internal static class StringExtensions
                         {
                             stateMachine = TokenizerStateMachine.EndOfToken;
                         }
+                        else if (nextChar.Equals('"'))
+                        {
+                            stateMachine = TokenizerStateMachine.InsideDoubleQuote;
+                        }
                         else if (nextChar.Equals('\''))
                         {
                             stateMachine = TokenizerStateMachine.InsideSingleQuote;
@@ -72,6 +78,19 @@ internal static class StringExtensions
                         else
                         {
                             stringBuilder.Append(nextCharInSingleQuote);
+                        }
+
+                        index++;
+                        break;
+                    case TokenizerStateMachine.InsideDoubleQuote:
+                        char nextCharInDoubleQuote = value[index];
+                        if (nextCharInDoubleQuote.Equals('"'))
+                        {
+                            stateMachine = TokenizerStateMachine.Normal;
+                        }
+                        else
+                        {
+                            stringBuilder.Append(nextCharInDoubleQuote);
                         }
 
                         index++;
