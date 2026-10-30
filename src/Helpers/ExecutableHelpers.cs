@@ -43,4 +43,5 @@ internal static class ExecutableHelpers
                (mode & UnixFileMode.GroupExecute) == UnixFileMode.GroupExecute || 
                (mode & UnixFileMode.OtherExecute) == UnixFileMode.OtherExecute;
     }
+    
 }

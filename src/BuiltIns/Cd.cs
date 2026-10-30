@@ -1,24 +1,22 @@
-﻿using CodeCrafters.Shell.Classes;
-
-namespace CodeCrafters.Shell.BuiltIns;
+﻿namespace CodeCrafters.Shell.BuiltIns;
 
 internal class Cd : IBuiltInCommand
 {
-    public void Execute(Token[] args)
+    public void Execute(Token[] tokens)
     {
-        if (args.Length < 1)
+        if (tokens.Length < 1)
         {
             Console.WriteLine("Usage: cd <path>");
             return;
         }
-        if (args.First().ToString() == "~") args[0] = new Token(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
-        if (Directory.Exists(args.First()))
+        if (tokens.First().ToString() == "~") tokens[0] = new Token(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        if (Directory.Exists(tokens.First()))
         {
-            Environment.CurrentDirectory = args.First()!;
+            Environment.CurrentDirectory = tokens.First();
         }
         else
         {
-            Console.WriteLine($"cd: {args.First().Value}: No such file or directory");
+            Console.WriteLine($"cd: {tokens.First().Value}: No such file or directory");
         }
     }
 

@@ -1,23 +1,9 @@
-using System.Diagnostics;
-using CodeCrafters.Shell.BuiltIns;
-using CodeCrafters.Shell.Classes;
-using CodeCrafters.Shell.Extensions;
-using ReadLine;
-using Type = CodeCrafters.Shell.BuiltIns.Type;
-using ReadLineExt = ReadLine.ReadLine;
-
 namespace CodeCrafters.Shell;
 
 internal static class Program
 {
 
-    internal static readonly IBuiltInCommand[] Builtins = [
-        new Exit(),
-        new Echo(),
-        new Type(),
-        new Pwd(),
-        new Cd()
-    ];
+    internal static readonly IBuiltInCommand[] Builtins = [new Exit(), new Echo(), new Type(), new Pwd(), new Cd()];
 
     static void Main()
     {
@@ -26,8 +12,7 @@ internal static class Program
 
         while (true)
         {
-
-            ReadLineExt.Context.AutoCompletionHandler = new AutoCompleteHandler();
+            ReadLineExt.Context.AutoCompletionHandler = new AutoCompleteHandler(Builtins);
             
             string input = ReadLineExt.Read("$ ", string.Empty)!;
             Token[] tokens = input.Tokenize();
@@ -65,22 +50,20 @@ internal static class Program
             // try to process built in commands
             foreach (IBuiltInCommand builtin in Builtins)
             {
-                if (builtin.CommandName.Equals(command.Value, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    builtin.Execute(tokens[1..]);
-                    handled = true;
-                    break;
-                }
+                if (!builtin.CommandName.Equals(command.Value, StringComparison.InvariantCultureIgnoreCase)) continue;
+                builtin.Execute(tokens[1..]);
+                handled = true;
+                break;
             }
             if (!handled)
             {
-                string? resolveFromPath = Helpers.ExecutableHelpers.ResolveExecutableFromPath(command.Value);
+                string? resolveFromPath = ExecutableHelpers.ResolveExecutableFromPath(command.Value);
                 if (resolveFromPath != null)
                 {
                     
                     // execute the executable with any provided arguments
                     ProcessStartInfo startInfo = new () { FileName = command.ToString() };
-                    tokens[1..].ToList().ForEach(t => startInfo.ArgumentList.Add(t!));
+                    tokens[1..].ToList().ForEach(t => startInfo.ArgumentList.Add(t));
                     startInfo.RedirectStandardOutput = true;
                     startInfo.RedirectStandardError = true;
                     Process? process = Process.Start(startInfo);
@@ -114,28 +97,5 @@ internal static class Program
             }
         }
         // ReSharper disable once FunctionNeverReturns
-    }
-
-    class AutoCompleteHandler : IAutoCompleteHandler
-    {
-        public string[] GetSuggestions(string text, int index)
-        {
-            List<string> suggestions = [];
-            foreach (IBuiltInCommand command in Builtins)
-            {
-                if (command.CommandName.StartsWith(text, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    suggestions.Add($"{command.CommandName} ");
-                }
-            }
-
-            if (suggestions.Count == 0)
-            {
-                Console.WriteLine("\a");
-            }
-            return suggestions.ToArray();
-        }
-
-        public char[] Separators { get; set; } = new char[] { ' ', '.', '/' };
     }
 }

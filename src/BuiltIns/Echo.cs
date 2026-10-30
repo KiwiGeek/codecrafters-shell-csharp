@@ -1,14 +1,12 @@
-using CodeCrafters.Shell.Classes;
-
 namespace CodeCrafters.Shell.BuiltIns;
 
 internal class Echo : IBuiltInCommand
 {
     public string CommandName => "echo";
 
-    public void Execute(Token[] args)
+    public void Execute(Token[] tokens)
     {
-        Console.WriteLine(string.Join(" ", args[0..]));
+        Console.WriteLine(string.Join(" ", tokens.AsSpan()[..]));
     }
 
 }
