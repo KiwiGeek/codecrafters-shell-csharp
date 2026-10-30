@@ -20,6 +20,7 @@ internal static class Program
     static void Main()
     {
         TextWriter originalOutput = Console.Out;
+        TextWriter originalError = Console.Error;
 
         while (true)
         {
@@ -32,6 +33,7 @@ internal static class Program
             Token command = tokens.First();
             bool handled = false;
             TextWriter output = Console.Out;
+            TextWriter error = Console.Error;
             
             // see if one of the tokens is a StandoutOutput redirect.
             if (tokens.Any(t => t.Value is ">" or "1>"))
@@ -43,7 +45,17 @@ internal static class Program
                 tokens = [.. tokens[..standardRedirectIndex], .. tokens[(standardRedirectIndex+2)..]];
             }
             
+            if (tokens.Any(t => t.Value is "2>"))
+            {
+                int standardErrorRedirectIndex = Array.IndexOf(tokens, tokens.First(d=> d.Value is "2>"));
+                string errorFileName = tokens[standardErrorRedirectIndex+ 1].Value;
+                error = new StreamWriter(errorFileName, false);
+                // remove the two tokens we just consumed
+                tokens = [.. tokens[..standardErrorRedirectIndex], .. tokens[(standardErrorRedirectIndex+2)..]];
+            }
+            
             Console.SetOut(output);
+            Console.SetError(error);
             
             // try to process built in commands
             foreach (IBuiltInCommand builtin in Builtins)
@@ -65,9 +77,11 @@ internal static class Program
                     ProcessStartInfo startInfo = new () { FileName = command.ToString() };
                     tokens[1..].ToList().ForEach(t => startInfo.ArgumentList.Add(t!));
                     startInfo.RedirectStandardOutput = true;
+                    startInfo.RedirectStandardError = true;
                     Process? process = Process.Start(startInfo);
                     process!.WaitForExit();
                     output.Write(process.StandardOutput.ReadToEnd());
+                    error.Write(process.StandardError.ReadToEnd());
                 }
                 else
                 {
@@ -82,6 +96,16 @@ internal static class Program
                     sw.Close();
                 }
                 Console.SetOut(originalOutput);
+            }
+
+            if (error != originalError)
+            {
+                error.Flush();
+                if (error is StreamWriter errorStream)
+                {
+                    errorStream.Close();
+                }
+                Console.SetError(originalError);
             }
         }
         // ReSharper disable once FunctionNeverReturns
