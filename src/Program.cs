@@ -46,11 +46,12 @@ internal static class Program
                 tokens = [.. tokens[..standardRedirectIndex], .. tokens[(standardRedirectIndex+2)..]];
             }
             
-            if (tokens.Any(t => t.Value is "2>"))
+            if (tokens.Any(t => t.Value is "2>" or "2>>"))
             {
-                int standardErrorRedirectIndex = Array.IndexOf(tokens, tokens.First(d=> d.Value is "2>"));
+                int standardErrorRedirectIndex = Array.IndexOf(tokens, tokens.First(d=> d.Value is "2>" or "2>>"));
                 string errorFileName = tokens[standardErrorRedirectIndex+ 1].Value;
-                error = new StreamWriter(errorFileName, false);
+                bool errorAppend = tokens[standardErrorRedirectIndex].Value.Contains(">>");
+                error = new StreamWriter(errorFileName, errorAppend);
                 // remove the two tokens we just consumed
                 tokens = [.. tokens[..standardErrorRedirectIndex], .. tokens[(standardErrorRedirectIndex+2)..]];
             }
