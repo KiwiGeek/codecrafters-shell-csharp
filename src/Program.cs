@@ -36,11 +36,12 @@ internal static class Program
             TextWriter error = Console.Error;
             
             // see if one of the tokens is a StandoutOutput redirect.
-            if (tokens.Any(t => t.Value is ">" or "1>"))
+            if (tokens.Any(t => t.Value is ">" or "1>" or ">>" or "1>>"))
             {
-                int standardRedirectIndex = Array.IndexOf(tokens, tokens.First(d=> d.Value is ">" or "1>"));
+                int standardRedirectIndex = Array.IndexOf(tokens, tokens.First(d=> d.Value is ">" or "1>" or ">>" or "1>>"));
                 string outputFileName = tokens[standardRedirectIndex+ 1].Value;
-                output = new StreamWriter(outputFileName, false);
+                bool append = tokens[standardRedirectIndex].Value.Contains(">>");
+                output = new StreamWriter(outputFileName, append);
                 // remove the two tokens we just consumed
                 tokens = [.. tokens[..standardRedirectIndex], .. tokens[(standardRedirectIndex+2)..]];
             }
