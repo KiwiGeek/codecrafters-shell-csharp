@@ -19,6 +19,7 @@ internal static class Program
 
     static void Main()
     {
+        TextWriter originalOutput = Console.Out;
 
         while (true)
         {
@@ -30,7 +31,20 @@ internal static class Program
             // Split the input into command and arguments
             Token command = tokens.First();
             bool handled = false;
-
+            TextWriter output = Console.Out;
+            
+            // see if one of the tokens is a StandoutOutput redirect.
+            if (tokens.Any(t => t.Value is ">" or "1>"))
+            {
+                int standardRedirectIndex = Array.IndexOf(tokens, tokens.First(d=> d.Value is ">" or "1>"));
+                string outputFileName = tokens[standardRedirectIndex+ 1].Value;
+                output = new StreamWriter(outputFileName, false);
+                // remove the two tokens we just consumed
+                tokens = [.. tokens[..standardRedirectIndex], .. tokens[(standardRedirectIndex+2)..]];
+            }
+            
+            Console.SetOut(output);
+            
             // try to process built in commands
             foreach (IBuiltInCommand builtin in Builtins)
             {
@@ -50,13 +64,24 @@ internal static class Program
                     // execute the executable with any provided arguments
                     ProcessStartInfo startInfo = new () { FileName = command.ToString() };
                     tokens[1..].ToList().ForEach(t => startInfo.ArgumentList.Add(t!));
+                    startInfo.RedirectStandardOutput = true;
                     Process? process = Process.Start(startInfo);
                     process!.WaitForExit();
+                    output.Write(process.StandardOutput.ReadToEnd());
                 }
                 else
                 {
                     Console.WriteLine($"{command.Value}: command not found");
                 }
+            }
+            if (output != originalOutput)
+            {
+                output.Flush();
+                if (output is StreamWriter sw)
+                {
+                    sw.Close();
+                }
+                Console.SetOut(originalOutput);
             }
         }
         // ReSharper disable once FunctionNeverReturns
