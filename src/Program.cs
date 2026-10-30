@@ -128,6 +128,11 @@ internal static class Program
                     suggestions.Add($"{command.CommandName} ");
                 }
             }
+
+            if (suggestions.Count == 0)
+            {
+                Console.WriteLine("\a");
+            }
             return suggestions.ToArray();
         }
 
