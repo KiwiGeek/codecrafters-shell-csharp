@@ -2,7 +2,9 @@ using System.Diagnostics;
 using CodeCrafters.Shell.BuiltIns;
 using CodeCrafters.Shell.Classes;
 using CodeCrafters.Shell.Extensions;
+using ReadLine;
 using Type = CodeCrafters.Shell.BuiltIns.Type;
+using ReadLineExt = ReadLine.ReadLine;
 
 namespace CodeCrafters.Shell;
 
@@ -24,11 +26,12 @@ internal static class Program
 
         while (true)
         {
-            Console.Write("$ ");
-            string input = Console.ReadLine() ?? string.Empty;
 
-            Token[] tokens = input.Tokenize();
+            ReadLineExt.Context.AutoCompletionHandler = new AutoCompleteHandler();
             
+            string input = ReadLineExt.Read("$ ", string.Empty)!;
+            Token[] tokens = input.Tokenize();
+            if (tokens.Length == 0) continue;
             // Split the input into command and arguments
             Token command = tokens.First();
             bool handled = false;
@@ -111,5 +114,23 @@ internal static class Program
             }
         }
         // ReSharper disable once FunctionNeverReturns
+    }
+
+    class AutoCompleteHandler : IAutoCompleteHandler
+    {
+        public string[] GetSuggestions(string text, int index)
+        {
+            List<string> suggestions = [];
+            foreach (IBuiltInCommand command in Builtins)
+            {
+                if (command.CommandName.StartsWith(text, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    suggestions.Add($"{command.CommandName} ");
+                }
+            }
+            return suggestions.ToArray();
+        }
+
+        public char[] Separators { get; set; } = new char[] { ' ', '.', '/' };
     }
 }
