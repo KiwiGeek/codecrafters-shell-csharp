@@ -13,13 +13,26 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
         string lastWord = text[(text.LastIndexOf(' ')+1)..];
         
         // see if we have registered completions for the first token
-        string command = text.Tokenize().First();
+        Token[] tokens = text.Tokenize();
+        string command = tokens.First();
         
         // get a reference to the completion builtin
         Complete completeBuiltIn = (Complete)Program.Builtins.Single(f => f.CommandName == "complete");
         if (completeBuiltIn.HasCompletion(command))
         {
-            return NothingBellAndLongestCommonPrefix(completeBuiltIn.ExecuteCompletion(command).ToList(), lastWord);
+            // for complete completions, we want to extract three arguments to pass to the completer script
+            // arg[1] = the command
+            // arg[2] = the word being completed, if anything typed so far
+            // arg[3] = the previous word
+            string completeArg1 = command;
+            string completeArg2 = lastWord;
+            string completeArg3 = text.Substring(completeArg1.Length, text.Length - completeArg1.Length - completeArg2.Length).Trim().Split(' ').Last();
+            
+            //Console.WriteLine($"Arg1: {completeArg1}, Arg2: {completeArg2}, Arg3: {completeArg3}");
+            
+            var completeResults = completeBuiltIn.ExecuteCompletion(completeArg1, completeArg2, completeArg3).ToList();
+            
+            return NothingBellAndLongestCommonPrefix(completeResults, lastWord);
         }
         
         
