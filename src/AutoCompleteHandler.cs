@@ -6,16 +6,25 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
     
     public string[] GetSuggestions(string text, int index)
     {
-        
         // if the text we are supplied doesn't have a space in it yet, we're trying to autocomplete an executable
         if (!text.Contains(' ')) return GetExecutableSuggestions(text, index);
         
         // extract the current word, via finding the last space in text, and taking to the end of the string
         string lastWord = text[(text.LastIndexOf(' ')+1)..];
-
+        
+        // see if we have registered completions for the first token
+        string command = text.Tokenize().First();
+        
+        // get a reference to the completion builtin
+        Complete completeBuiltIn = (Complete)Program.Builtins.Single(f => f.CommandName == "complete");
+        if (completeBuiltIn.HasCompletion(command))
+        {
+            return [..completeBuiltIn.ExecuteCompletion(command)];
+        }
+        
+        
         return GetFilenamesFromCurrentDirectory(lastWord, text);
         
-        return [];
     }
 
     private string[] GetExecutableSuggestions(string text, int index)

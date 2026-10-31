@@ -56,5 +56,26 @@ internal class Complete : IBuiltInCommand
             }
         }
     }
+    
+    public bool HasCompletion(string command)
+    {
+        return _completions.ContainsKey(command);
+    }
+
+    public string[] ExecuteCompletion(string command)
+    {
+        string completerScript = _completions[command];
+        ProcessStartInfo startInfo = new () { FileName = completerScript };
+        startInfo.RedirectStandardOutput = true;
+        startInfo.RedirectStandardError = true;
+        Process? process = Process.Start(startInfo);
+        process!.WaitForExit();
+        string result = process.StandardOutput.ReadToEnd();
+        result = result.Trim() + ' ';
+        return [result];
+        // string[] lines = result.Split(Environment.NewLine);
+        // List<string> completions = [.. lines.Select(line => line + ' ')];
+        // return [.. completions.Distinct().Concat(completions).ToArray()];
+    }
 
 }
