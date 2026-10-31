@@ -71,6 +71,7 @@ internal class Complete : IBuiltInCommand
         Process? process = Process.Start(startInfo);
         process!.WaitForExit();
         string result = process.StandardOutput.ReadToEnd();
+        if (result.Length == 0) return []; 
         result = result.Trim() + ' ';
         return [result];
         // string[] lines = result.Split(Environment.NewLine);

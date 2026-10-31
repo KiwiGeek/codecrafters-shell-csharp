@@ -19,7 +19,7 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
         Complete completeBuiltIn = (Complete)Program.Builtins.Single(f => f.CommandName == "complete");
         if (completeBuiltIn.HasCompletion(command))
         {
-            return [..completeBuiltIn.ExecuteCompletion(command)];
+            return NothingBellAndLongestCommonPrefix(completeBuiltIn.ExecuteCompletion(command).ToList(), lastWord);
         }
         
         
@@ -61,8 +61,8 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
     {
         if (suggestions.Count == 0)
         {
-            Console.WriteLine("\a");
-        }
+            Console.Write("\a");
+        }   
         else if (suggestions.Distinct().Count() > 1)
         {
             // determine if there is a common prefix, and if there is, find the longest common prefix.
