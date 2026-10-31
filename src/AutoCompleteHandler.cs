@@ -6,6 +6,21 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
     
     public string[] GetSuggestions(string text, int index)
     {
+        
+        // if the text we are supplied doesn't have a space in it yet, we're trying to autocomplete an executable
+        if (!text.Contains(' ')) return GetExecutableSuggestions(text, index);
+        
+        // extract the current word, via finding the last space in text, and taking to the end of the string
+        string lastWord = text[(text.LastIndexOf(' ')+1)..];
+
+        return GetFilenamesFromCurrentDirectory(lastWord, text);
+        
+        return [];
+    }
+
+    private string[] GetExecutableSuggestions(string text, int index)
+    {
+        
         List<string> suggestions =
         [
             .. from command in builtInCommands
@@ -17,6 +32,21 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
             .ToList()
             .ForEach(d => suggestions.Add($"{d} "));
 
+        return NothingBellAndLongestCommonPrefix(suggestions, text);
+    }
+
+    private string[] GetFilenamesFromCurrentDirectory(string lastWord, string text)
+    {
+        List<string> files = Directory
+            .GetFiles(Directory.GetCurrentDirectory(), $"{lastWord}*")
+            .Select(f => Path.GetFileName(f) + " ")
+            .ToList()!;
+        return NothingBellAndLongestCommonPrefix(files, lastWord);
+    }
+    
+    
+    private string[] NothingBellAndLongestCommonPrefix(List<string> suggestions, string text)
+    {
         if (suggestions.Count == 0)
         {
             Console.WriteLine("\a");
@@ -44,5 +74,5 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
         
         return [.. suggestions.Distinct()];
     }
-
+    
 }
