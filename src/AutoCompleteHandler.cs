@@ -40,7 +40,10 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
         List<string> files = Directory
             .GetFiles(Directory.GetCurrentDirectory(), $"{lastWord}*")
             .Select(f => Path.GetFileName(f) + " ")
-            .ToList()!;
+            .ToList();
+        files.AddRange(Directory
+            .GetDirectories(Directory.GetCurrentDirectory(), $"{lastWord}*")
+            .Select(f => Path.GetFileName(f) + "/"));
         return NothingBellAndLongestCommonPrefix(files, lastWord);
     }
     
