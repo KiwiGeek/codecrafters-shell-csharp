@@ -62,7 +62,7 @@ internal class Complete : IBuiltInCommand
         return _completions.ContainsKey(command);
     }
 
-    public string[] ExecuteCompletion(string commandArg1,  string commandArg2, string commandArg3)
+    public string[] ExecuteCompletion(string fullCommandLine, int cursorIndex, string commandArg1,  string commandArg2, string commandArg3)
     {
         string completerScript = _completions[commandArg1];
         ProcessStartInfo startInfo = new () { FileName = completerScript };
@@ -71,6 +71,8 @@ internal class Complete : IBuiltInCommand
         startInfo.ArgumentList.Add(commandArg1);
         startInfo.ArgumentList.Add(commandArg2);
         startInfo.ArgumentList.Add(commandArg3);
+        startInfo.EnvironmentVariables.Add("COMP_LINE", fullCommandLine);
+        startInfo.EnvironmentVariables.Add("COMP_POINT", cursorIndex.ToString());
         Process? process = Process.Start(startInfo);
         process!.WaitForExit();
         string result = process.StandardOutput.ReadToEnd();

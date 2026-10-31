@@ -27,11 +27,12 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
             string completeArg1 = command;
             string completeArg2 = lastWord;
             string completeArg3 = text.Substring(completeArg1.Length, text.Length - completeArg1.Length - completeArg2.Length).Trim().Split(' ').Last();
-            
-            //Console.WriteLine($"Arg1: {completeArg1}, Arg2: {completeArg2}, Arg3: {completeArg3}");
-            
-            var completeResults = completeBuiltIn.ExecuteCompletion(completeArg1, completeArg2, completeArg3).ToList();
-            
+            List<string> completeResults = completeBuiltIn.ExecuteCompletion(
+                text, 
+                text.Length, 
+                completeArg1, 
+                completeArg2, 
+                completeArg3).ToList();
             return NothingBellAndLongestCommonPrefix(completeResults, lastWord);
         }
         
