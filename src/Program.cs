@@ -3,7 +3,9 @@ namespace CodeCrafters.Shell;
 internal static class Program
 {
 
-    internal static readonly IBuiltInCommand[] Builtins = [new Exit(), new Echo(), new Type(), new Pwd(), new Cd()];
+    internal static readonly IBuiltInCommand[] Builtins = [
+        new Exit(), new Echo(), new Type(), new Pwd(), new Cd(), new Complete()
+    ];
 
     static void Main()
     {
