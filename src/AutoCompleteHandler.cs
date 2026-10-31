@@ -18,7 +18,7 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
             .ForEach(d => suggestions.Add($"{d} "));
 
         if (suggestions.Count == 0) Console.WriteLine("\a");
-        return [.. suggestions];
+        return [.. suggestions.Distinct()];
     }
 
 }

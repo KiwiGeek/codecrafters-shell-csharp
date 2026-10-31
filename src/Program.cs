@@ -12,6 +12,7 @@ internal static class Program
 
         while (true)
         {
+            ReadLineExt.Context.AutoCompletionMode = AutoCompletionModes.ListAll;
             ReadLineExt.Context.AutoCompletionHandler = new AutoCompleteHandler(Builtins);
             
             string input = ReadLineExt.Read("$ ", string.Empty)!;
