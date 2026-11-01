@@ -81,7 +81,7 @@ internal static class Program
                     {
                         Jobs jobBuiltIn = Builtins.Single(f => f.CommandName == "jobs") as Jobs ??
                                                      throw new InvalidOperationException();
-                        jobBuiltIn.RegisterBackgroundJob(process!.Id, input);
+                        jobBuiltIn.RegisterBackgroundJob(process, input);
                     }
                     else
                     {
