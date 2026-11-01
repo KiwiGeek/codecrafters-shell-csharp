@@ -12,13 +12,7 @@ public class Jobs : IBuiltInCommand
         public string Command { get; private set; }
         public int JobId { get; init; }
         public int ProcessId { get; init; }
-        public char MostRecentMarker { get; private set; }
         private Process Process { get; init; }
-
-        public void DecrementRecentMarker()
-        {
-            MostRecentMarker = MostRecentMarker switch { '+' => '-', _ => ' ' };
-        }
 
         public void CheckForDeadProcesses()
         {
@@ -36,7 +30,6 @@ public class Jobs : IBuiltInCommand
             ProcessId = processId;
             Command = command;
             Status = status;
-            MostRecentMarker = '+';
             Process = process;
         }
     }
@@ -46,7 +39,6 @@ public class Jobs : IBuiltInCommand
     public void RegisterBackgroundJob(Process process, string command)
     {
         _backgroundSeqId++;
-        _jobs.ForEach(j => j.DecrementRecentMarker());
         _jobs.Add(new JobInfo(_backgroundSeqId, process.Id, command, "Running", process));
         Console.WriteLine($"[{_backgroundSeqId}] {process.Id}");
     }
@@ -56,10 +48,15 @@ public class Jobs : IBuiltInCommand
 
     public void Execute(Token[] tokens)
     {
+        int highestSeqId = _jobs.OrderByDescending(f => f.JobId).FirstOrDefault()?.JobId ?? 0;
+        int secondHighestSeqId = _jobs.Count<2 ? 0 : _jobs.OrderByDescending(f => f.JobId).Skip(1).First().JobId;
         foreach (JobInfo job in _jobs)
         {
             job.CheckForDeadProcesses();
-            Console.WriteLine($"[{job.JobId}]{job.MostRecentMarker}  {job.Status,-24}{job.Command}");
+            char marker = ' ';
+            if (job.JobId == highestSeqId) marker = '+';
+            else if (job.JobId == secondHighestSeqId) marker = '-';
+            Console.WriteLine($"[{job.JobId}]{marker}  {job.Status,-24}{job.Command}");
         }
 
         _jobs.RemoveAll(j => j.Status == "Done");
