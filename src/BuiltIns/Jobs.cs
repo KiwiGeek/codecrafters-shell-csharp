@@ -62,4 +62,21 @@ public class Jobs : IBuiltInCommand
         _jobs.RemoveAll(j => j.Status == "Done");
     }
 
+    public void BackgroundReap()
+    {
+        int highestSeqId = _jobs.OrderByDescending(f => f.JobId).FirstOrDefault()?.JobId ?? 0;
+        int secondHighestSeqId = _jobs.Count<2 ? 0 : _jobs.OrderByDescending(f => f.JobId).Skip(1).First().JobId;
+        foreach (JobInfo job in _jobs)
+        {
+            job.CheckForDeadProcesses();
+            char marker = ' ';
+            if (job.JobId == highestSeqId) marker = '+';
+            else if (job.JobId == secondHighestSeqId) marker = '-';
+            if (job.Status == "Done")
+            {
+                Console.WriteLine($"[{job.JobId}]{marker}  {job.Status,-24}{job.Command}");
+            }
+        }
+        _jobs.RemoveAll(j => j.Status == "Done");
+    }
 }

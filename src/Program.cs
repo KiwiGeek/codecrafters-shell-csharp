@@ -11,11 +11,15 @@ internal static class Program
     {
         TextWriter originalOutput = Console.Out;
         TextWriter originalError = Console.Error;
+        Jobs jobBuiltIn = Builtins.Single(f => f.CommandName == "jobs") as Jobs ??
+                          throw new InvalidOperationException();
 
         while (true)
         {
             ReadLineExt.Context.AutoCompletionMode = AutoCompletionModes.ListAll;
             ReadLineExt.Context.AutoCompletionHandler = new AutoCompleteHandler(Builtins);
+
+            jobBuiltIn.BackgroundReap();
             
             string input = ReadLineExt.Read("$ ", string.Empty)!;
             Token[] tokens = input.Tokenize();
@@ -79,8 +83,6 @@ internal static class Program
                     Process? process = Process.Start(startInfo);
                     if (backgroundExecute)
                     {
-                        Jobs jobBuiltIn = Builtins.Single(f => f.CommandName == "jobs") as Jobs ??
-                                                     throw new InvalidOperationException();
                         jobBuiltIn.RegisterBackgroundJob(process, input);
                     }
                     else
