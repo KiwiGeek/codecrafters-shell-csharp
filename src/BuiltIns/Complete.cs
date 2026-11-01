@@ -50,6 +50,17 @@ internal class Complete : IBuiltInCommand
                     }
 
                     break;
+                case "-r":
+                    if (tokens.Count() == 1)
+                    {
+                        Console.WriteLine("Need command name after -p");
+                    }
+
+                    if (_completions.ContainsKey(tokens.Skip(1).First()))
+                    {
+                        _completions.Remove(tokens.Skip(1).First());
+                    }
+                    break;
                 default:
                     Console.WriteLine("Unrecognized command");
                     break;
