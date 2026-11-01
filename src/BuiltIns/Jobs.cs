@@ -10,14 +10,20 @@ public class Jobs : IBuiltInCommand
         public string Command { get; init; }
         public int JobId { get; init; }
         public int ProcessId { get; init; }
+        public char MostRecentMarker { get; private set; }
 
-
+        public void DecrementRecentMarker()
+        {
+            MostRecentMarker = MostRecentMarker switch { '+' => '-', _ => ' ' };
+        }
+        
         internal JobInfo(int jobId, int processId, string command, string status) 
         {
             JobId = jobId;
             ProcessId = processId;
             Command = command;
             Status = status;
+            MostRecentMarker = '+';
         }
     }
 
@@ -26,6 +32,7 @@ public class Jobs : IBuiltInCommand
     public void RegisterBackgroundJob(int processId, string command)
     {
         _backgroundSeqId++;
+        _jobs.ForEach(j => j.DecrementRecentMarker());
         _jobs.Add(new JobInfo(_backgroundSeqId, processId, command, "Running"));
         Console.WriteLine($"[{_backgroundSeqId}] {processId}");
     }
@@ -37,7 +44,7 @@ public class Jobs : IBuiltInCommand
     {
         foreach (JobInfo job in _jobs)
         {
-            Console.WriteLine($"[{job.JobId}]+  {job.Status,-24}{job.Command}");
+            Console.WriteLine($"[{job.JobId}]{job.MostRecentMarker}  {job.Status,-24}{job.Command}");
         }
     }
 
