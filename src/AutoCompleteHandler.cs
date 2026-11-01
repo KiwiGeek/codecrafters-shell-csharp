@@ -27,6 +27,7 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
             string completeArg1 = command;
             string completeArg2 = lastWord;
             string completeArg3 = text.Substring(completeArg1.Length, text.Length - completeArg1.Length - completeArg2.Length).Trim().Split(' ').Last();
+            if (completeArg3.IsWhiteSpace()) completeArg3 = completeArg1;
             List<string> completeResults = completeBuiltIn.ExecuteCompletion(
                 text, 
                 text.Length, 

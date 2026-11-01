@@ -77,11 +77,12 @@ internal class Complete : IBuiltInCommand
         process!.WaitForExit();
         string result = process.StandardOutput.ReadToEnd();
         if (result.Length == 0) return []; 
-        result = result.Trim() + ' ';
-        return [result];
-        // string[] lines = result.Split(Environment.NewLine);
-        // List<string> completions = [.. lines.Select(line => line + ' ')];
-        // return [.. completions.Distinct().Concat(completions).ToArray()];
+        //result = result.Trim() + ' ';
+        //return [result];
+        string[] lines = result.Split(Environment.NewLine);
+        List<string> completions = [.. lines.Select(line => line + ' ')];
+        completions.RemoveAll(string.IsNullOrWhiteSpace);
+        return [.. completions.Distinct().Concat(completions).ToArray()];
     }
 
 }

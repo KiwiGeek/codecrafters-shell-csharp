@@ -377,7 +377,7 @@ internal class KeyHandler
                 }
                 else
                 {
-                    // we are on the second tab, and alraedy have completions.
+                    // we are on the second tab, and already have completions.
                     string[] sorted = _completions.OrderBy(f => f).ToArray();
                     Console.WriteLine();
                     Console.WriteLine(string.Join("  ", sorted));
