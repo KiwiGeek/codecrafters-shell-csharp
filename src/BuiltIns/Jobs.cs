@@ -4,8 +4,7 @@ namespace CodeCrafters.Shell.BuiltIns;
 
 public class Jobs : IBuiltInCommand
 {
-    private int _backgroundSeqId;
-
+    
     internal class JobInfo
     {
         public string Status { get; private set; }
@@ -38,9 +37,20 @@ public class Jobs : IBuiltInCommand
 
     public void RegisterBackgroundJob(Process process, string command)
     {
-        _backgroundSeqId++;
-        _jobs.Add(new JobInfo(_backgroundSeqId, process.Id, command, "Running", process));
-        Console.WriteLine($"[{_backgroundSeqId}] {process.Id}");
+        // find the lowest unused jobId > 0.
+        int newId = 1;
+        bool found = false;
+        while (!found)
+        {
+            if (_jobs.Any(j => j.JobId == newId))
+            {
+                newId++;
+                continue;
+            }
+            found = true;
+        }
+        _jobs.Add(new JobInfo(newId, process.Id, command, "Running", process));
+        Console.WriteLine($"[{newId}] {process.Id}");
     }
     
     
