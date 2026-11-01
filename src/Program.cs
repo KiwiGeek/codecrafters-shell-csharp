@@ -2,8 +2,7 @@ namespace CodeCrafters.Shell;
 
 internal static class Program
 {
-    private static int _backgroundJobSequenceId;
-    
+
     internal static readonly IBuiltInCommand[] Builtins = [
         new Exit(), new Echo(), new Type(), new Pwd(), new Cd(), new Complete(), new Jobs()
     ];
@@ -80,10 +79,9 @@ internal static class Program
                     Process? process = Process.Start(startInfo);
                     if (backgroundExecute)
                     {
-                        int pid = process!.Id;
-                        _backgroundJobSequenceId++;
-                        // todo probably; stick this into some sort of queue
-                        Console.WriteLine($"[{_backgroundJobSequenceId}] {pid}");
+                        Jobs jobBuiltIn = Builtins.Single(f => f.CommandName == "jobs") as Jobs ??
+                                                     throw new InvalidOperationException();
+                        jobBuiltIn.RegisterBackgroundJob(process!.Id, input);
                     }
                     else
                     {
