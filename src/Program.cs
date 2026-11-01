@@ -2,7 +2,8 @@ namespace CodeCrafters.Shell;
 
 internal static class Program
 {
-
+    private static int _backgroundJobSequenceId;
+    
     internal static readonly IBuiltInCommand[] Builtins = [
         new Exit(), new Echo(), new Type(), new Pwd(), new Cd(), new Complete(), new Jobs()
     ];
@@ -63,16 +64,34 @@ internal static class Program
                 string? resolveFromPath = ExecutableHelpers.ResolveExecutableFromPath(command.Value);
                 if (resolveFromPath != null)
                 {
+                    bool backgroundExecute = (tokens.Last().Value is "&");
                     
                     // execute the executable with any provided arguments
                     ProcessStartInfo startInfo = new () { FileName = command.ToString() };
                     tokens[1..].ToList().ForEach(t => startInfo.ArgumentList.Add(t));
-                    startInfo.RedirectStandardOutput = true;
-                    startInfo.RedirectStandardError = true;
+                    if (backgroundExecute) startInfo.ArgumentList.RemoveAt(startInfo.ArgumentList.Count - 1);
+                    if (!backgroundExecute)
+                    { 
+                        startInfo.RedirectStandardOutput = true;
+                        startInfo.RedirectStandardError = true;  
+                    }
+                    startInfo.UseShellExecute = false;
+                    startInfo.CreateNoWindow = backgroundExecute;
                     Process? process = Process.Start(startInfo);
-                    process!.WaitForExit();
-                    output.Write(process.StandardOutput.ReadToEnd());
-                    error.Write(process.StandardError.ReadToEnd());
+                    if (backgroundExecute)
+                    {
+                        int pid = process!.Id;
+                        _backgroundJobSequenceId++;
+                        // todo probably; stick this into some sort of queue
+                        Console.WriteLine($"[{_backgroundJobSequenceId}] {pid}");
+                    }
+                    else
+                    {
+                        process!.WaitForExit();
+                        output.Write(process.StandardOutput.ReadToEnd());
+                        error.Write(process.StandardError.ReadToEnd()); 
+                    }
+
                 }
                 else
                 {
