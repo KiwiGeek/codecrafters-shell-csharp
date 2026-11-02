@@ -4,10 +4,12 @@ internal class History : IBuiltInCommand
 {
 
     private List<string> _history = [];
+    private List<string> _appendableHistory = [];
     
     public void RegisterHistory(string command)
     {
         _history.Add(command);
+        _appendableHistory.Add(command);
     }
     
     public string CommandName => "history";
@@ -16,6 +18,7 @@ internal class History : IBuiltInCommand
 
         if (TryExecuteHistoryRead(tokens, context)) return;
         if (TryExecuteHistoryWrite(tokens, context)) return;
+        if (TryExecuteHistoryAppend(tokens, context)) return;
         
         List<string> potentialLines = [];
         
@@ -72,6 +75,15 @@ internal class History : IBuiltInCommand
         if (tokens.Length < 2 || tokens[0].Value != "-w") return false;
         string fileName =  tokens.Skip(1).First().Value;
         File.WriteAllLines(fileName, _history);
+        return true;
+    }
+    
+    private bool TryExecuteHistoryAppend(Token[] tokens, CommandContext context)
+    {
+        if (tokens.Length < 2 || tokens[0].Value != "-a") return false;
+        string fileName =  tokens.Skip(1).First().Value;
+        File.AppendAllLines(fileName, _appendableHistory);
+        _appendableHistory.Clear();
         return true;
     }
 }
