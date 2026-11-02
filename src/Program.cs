@@ -14,6 +14,8 @@ internal static class Program
         TextReader originalInput = Console.In;
         Jobs jobBuiltIn = Builtins.Single(f => f.CommandName == "jobs") as Jobs ??
                           throw new InvalidOperationException();
+        History historyBuiltIn = Builtins.Single(f => f.CommandName == "history") as History ??
+                                 throw new InvalidOperationException();
         PipelineExecutor executor = new ()
         {
             Builtins = Builtins,
@@ -33,6 +35,7 @@ internal static class Program
             {
                 jobBuiltIn.BackgroundReap(originalOutput);
                 string input = ReadLineExt.Read("$ ", string.Empty)!;
+                historyBuiltIn.RegisterHistory(input);
                 Pipeline pipeline = input.Tokenize();
                 await executor.ExecutePipeline(pipeline);
             }
