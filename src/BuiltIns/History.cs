@@ -93,4 +93,11 @@ internal class History : IBuiltInCommand
         if (fileName == null || !File.Exists(fileName)) return;
         foreach (string s in File.ReadAllLines(fileName)) _history.Add(s);
     }
+
+    public void TryAppendHistoryFromEnvironment()
+    {
+        string? fileName = Environment.GetEnvironmentVariable("HISTFILE");
+        if (fileName == null) return;
+        File.AppendAllLines(fileName, _appendableHistory);
+    }
 }
