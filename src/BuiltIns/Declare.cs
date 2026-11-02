@@ -15,17 +15,25 @@ internal partial class Declare : IBuiltInCommand
         context.StandardError.WriteLine("Unknown command");
     }
 
-    public Token TryExpand(Token token)
+    public Token? TryExpand(Token token)
     {
-        string variable = token.Value;
-        foreach (KeyValuePair<string, string> declare in _declared)
+        string expanded = VariableExpansionRegex().Replace(token.Value, match =>
         {
-            variable = variable.Replace($$$$$"""${{{{{{declare.Key}}}}}}""", declare.Value);
-            variable = variable.Replace($"${declare.Key}", declare.Value);
-        }
+            string name = match.Groups["braced"].Success
+                ? match.Groups["braced"].Value
+                : match.Groups["plain"].Value;
 
-        return new Token(variable);
+            return _declared.GetValueOrDefault(name, "");
+        });
+
+        if (token.Value.Length > 0 && expanded.Length == 0)
+            return null;
+
+        return new Token(expanded);
     }
+
+    [GeneratedRegex(@"\$\{(?<braced>[_A-Za-z][_A-Za-z0-9]*)\}|\$(?<plain>[_A-Za-z][_A-Za-z0-9]*)")]
+    private static partial Regex VariableExpansionRegex();
 
     private bool TryExecutePrint(Token[] tokens, CommandContext context)
     {
@@ -52,6 +60,7 @@ internal partial class Declare : IBuiltInCommand
         if (!VariableNameRegex().IsMatch(variableName))
         {
             context.StandardError.WriteLine($"declare: `{command}': not a valid identifier");
+            return true;
         }
         string value = command[(command.IndexOf('=') + 1)..];
         _declared.Remove(variableName);

@@ -122,7 +122,8 @@ internal class PipelineExecutor
 
         foreach (Token argument in stage.Arguments)
         {
-            startInfo.ArgumentList.Add(DeclareBuiltin.TryExpand(argument));
+            Token? value = DeclareBuiltin.TryExpand(argument);
+            if (value != null) startInfo.ArgumentList.Add(value);
         }
     
         Process process = new() { StartInfo = startInfo };
