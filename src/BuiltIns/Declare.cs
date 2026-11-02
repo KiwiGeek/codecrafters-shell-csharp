@@ -20,6 +20,7 @@ internal partial class Declare : IBuiltInCommand
         string variable = token.Value;
         foreach (KeyValuePair<string, string> declare in _declared)
         {
+            variable = variable.Replace($$$$$"""${{{{{{declare.Key}}}}}}""", declare.Value);
             variable = variable.Replace($"${declare.Key}", declare.Value);
         }
 
