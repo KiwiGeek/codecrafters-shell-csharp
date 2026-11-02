@@ -14,7 +14,8 @@ internal class History : IBuiltInCommand
     public void Execute(Token[] tokens, CommandContext context)
     {
 
-        if (TryExecuteHistoryRetrieve(tokens, context)) return;
+        if (TryExecuteHistoryRead(tokens, context)) return;
+        if (TryExecuteHistoryWrite(tokens, context)) return;
         
         List<string> potentialLines = [];
         
@@ -45,23 +46,32 @@ internal class History : IBuiltInCommand
         }
     }
 
-    private bool TryExecuteHistoryRetrieve(Token[] tokens, CommandContext context)
+    private bool TryExecuteHistoryRead(Token[] tokens, CommandContext context)
     {
         if (tokens.Length > 1 && tokens.First().Value.Equals("-r"))
         {
+            string fileName =  tokens.Skip(1).First().Value;
             // see if the second token represents a real file.
-            if (File.Exists(tokens.Skip(1).First().Value))
+            if (File.Exists(fileName))
             {
-                foreach (string s in File.ReadAllLines(tokens.Skip(1).First().Value))
+                foreach (string s in File.ReadAllLines(fileName))
                 {
                     _history.Add(s);
                 }
 
                 return true;
             }
-            context.StandardError.WriteLine($"{tokens.Skip(1).First().Value} not found.");
+            context.StandardError.WriteLine($"{fileName} not found.");
         }
 
         return false;
+    }
+
+    private bool TryExecuteHistoryWrite(Token[] tokens, CommandContext context)
+    {
+        if (tokens.Length < 2 || tokens[0].Value != "-w") return false;
+        string fileName =  tokens.Skip(1).First().Value;
+        File.WriteAllLines(fileName, _history);
+        return true;
     }
 }
