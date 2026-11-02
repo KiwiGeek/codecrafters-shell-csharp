@@ -13,6 +13,9 @@ internal class History : IBuiltInCommand
     public string CommandName => "history";
     public void Execute(Token[] tokens, CommandContext context)
     {
+
+        if (TryExecuteHistoryRetrieve(tokens, context)) return;
+        
         List<string> potentialLines = [];
         
         foreach (var (item, index) in _history.Select((value, idx) => (value, idx+1)))
@@ -40,5 +43,25 @@ internal class History : IBuiltInCommand
         {
             context.StandardOutput.WriteLine(s);
         }
+    }
+
+    private bool TryExecuteHistoryRetrieve(Token[] tokens, CommandContext context)
+    {
+        if (tokens.Length > 1 && tokens.First().Value.Equals("-r"))
+        {
+            // see if the second token represents a real file.
+            if (File.Exists(tokens.Skip(1).First().Value))
+            {
+                foreach (string s in File.ReadAllLines(tokens.Skip(1).First().Value))
+                {
+                    _history.Add(s);
+                }
+
+                return true;
+            }
+            context.StandardError.WriteLine($"{tokens.Skip(1).First().Value} not found.");
+        }
+
+        return false;
     }
 }
