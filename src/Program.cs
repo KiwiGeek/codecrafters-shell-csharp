@@ -17,13 +17,16 @@ internal static class Program
                           throw new InvalidOperationException();
         History historyBuiltIn = Builtins.Single(f => f.CommandName == "history") as History ??
                                  throw new InvalidOperationException();
+        Declare declareBuiltIn = Builtins.Single(f => f.CommandName == "declare") as Declare ??
+                                 throw new InvalidOperationException();
         PipelineExecutor executor = new ()
         {
             Builtins = Builtins,
             ConsoleOutput = originalOutput,
             ConsoleError = originalError,
             ConsoleInput = originalInput,
-            JobsBuiltin = jobBuiltIn
+            JobsBuiltin = jobBuiltIn,
+            DeclareBuiltin = declareBuiltIn
         };
         
         ReadLineExt.Context.AutoCompletionMode = AutoCompletionModes.ListAll;

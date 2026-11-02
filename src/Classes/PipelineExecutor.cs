@@ -9,6 +9,7 @@ internal class PipelineExecutor
     internal required TextWriter ConsoleError { get; init; }
     internal required TextReader ConsoleInput { get; init; }
     internal required Jobs JobsBuiltin { get; init; }
+    internal required Declare DeclareBuiltin { get; init; }
     
     public async Task ExecutePipeline(Pipeline pipeline)
     {
@@ -67,7 +68,10 @@ internal class PipelineExecutor
                     {
                         try
                         {
-                            builtin.Execute(stage.Arguments, context);
+                            List<Token> args = [];
+                            builtin.Execute(
+                                stage.Arguments.Select(argument => 
+                                    new Token(DeclareBuiltin.TryExpand(argument))).ToArray(), context);
                             context.StandardOutput.Flush();
                         }
                         finally
@@ -116,7 +120,11 @@ internal class PipelineExecutor
             RedirectStandardError = !pipeline.BackgroundJob
         };
 
-        foreach (Token argument in stage.Arguments) startInfo.ArgumentList.Add(argument.ToString());
+        foreach (Token argument in stage.Arguments)
+        {
+            startInfo.ArgumentList.Add(DeclareBuiltin.TryExpand(argument));
+        }
+    
         Process process = new() { StartInfo = startInfo };
         process.Start();
 

@@ -15,6 +15,17 @@ internal partial class Declare : IBuiltInCommand
         context.StandardError.WriteLine("Unknown command");
     }
 
+    public Token TryExpand(Token token)
+    {
+        string variable = token.Value;
+        foreach (KeyValuePair<string, string> declare in _declared)
+        {
+            variable = variable.Replace($"${declare.Key}", declare.Value);
+        }
+
+        return new Token(variable);
+    }
+
     private bool TryExecutePrint(Token[] tokens, CommandContext context)
     {
         if (tokens.Length < 2) return false;
