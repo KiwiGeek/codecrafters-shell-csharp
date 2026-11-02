@@ -1,6 +1,8 @@
+using System.Text.RegularExpressions;
+
 namespace CodeCrafters.Shell.BuiltIns;
 
-internal class Declare : IBuiltInCommand
+internal partial class Declare : IBuiltInCommand
 {
     private Dictionary<string, string> _declared = [];
     
@@ -35,9 +37,16 @@ internal class Declare : IBuiltInCommand
         string command = tokens.First().Value;
         if (!command.Contains('=')) return false;
         string variableName = command[..command.IndexOf('=')];
+        if (!VariableNameRegex().IsMatch(variableName))
+        {
+            context.StandardError.WriteLine($"declare: `{command}': not a valid identifier");
+        }
         string value = command[(command.IndexOf('=') + 1)..];
         _declared.Remove(variableName);
         _declared.TryAdd(variableName, value);
         return true;
     }
+
+    [GeneratedRegex(@"^[_A-Za-z][_A-Za-z0-9]*$")]
+    private static partial Regex VariableNameRegex();
 }
