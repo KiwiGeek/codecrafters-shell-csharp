@@ -28,6 +28,9 @@ internal static class Program
         ReadLineExt.Context.AutoCompletionMode = AutoCompletionModes.ListAll;
         ReadLineExt.Context.AutoCompletionHandler = new AutoCompleteHandler(Builtins);
         ReadLineExt.Context.HistoryEnabled = true;
+        
+        // restore history on load?
+        historyBuiltIn.TryLoadHistoryFromEnvironment();
 
         while (true)
         {

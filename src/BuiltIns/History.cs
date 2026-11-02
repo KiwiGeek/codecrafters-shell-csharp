@@ -86,4 +86,11 @@ internal class History : IBuiltInCommand
         _appendableHistory.Clear();
         return true;
     }
+
+    public void TryLoadHistoryFromEnvironment()
+    {
+        string? fileName = Environment.GetEnvironmentVariable("HISTFILE");
+        if (fileName == null || !File.Exists(fileName)) return;
+        foreach (string s in File.ReadAllLines(fileName)) _history.Add(s);
+    }
 }
