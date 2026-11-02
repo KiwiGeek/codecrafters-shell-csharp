@@ -4,7 +4,7 @@ internal static class Program
 {
 
     internal static readonly IBuiltInCommand[] Builtins = [
-        new Exit(), new Echo(), new Type(), new Pwd(), new Cd(), new Complete(), new Jobs()
+        new Exit(), new Echo(), new Type(), new Pwd(), new Cd(), new Complete(), new Jobs(), new History()
     ];
 
     static async Task Main()
