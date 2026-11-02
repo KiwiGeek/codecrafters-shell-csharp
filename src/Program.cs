@@ -7,116 +7,40 @@ internal static class Program
         new Exit(), new Echo(), new Type(), new Pwd(), new Cd(), new Complete(), new Jobs()
     ];
 
-    static void Main()
+    static async Task Main()
     {
         TextWriter originalOutput = Console.Out;
         TextWriter originalError = Console.Error;
+        TextReader originalInput = Console.In;
         Jobs jobBuiltIn = Builtins.Single(f => f.CommandName == "jobs") as Jobs ??
                           throw new InvalidOperationException();
+        PipelineExecutor executor = new ()
+        {
+            Builtins = Builtins,
+            ConsoleOutput = originalOutput,
+            ConsoleError = originalError,
+            ConsoleInput = originalInput,
+            JobsBuiltin = jobBuiltIn
+        };
+        
+        ReadLineExt.Context.AutoCompletionMode = AutoCompletionModes.ListAll;
+        ReadLineExt.Context.AutoCompletionHandler = new AutoCompleteHandler(Builtins);
 
         while (true)
         {
-            ReadLineExt.Context.AutoCompletionMode = AutoCompletionModes.ListAll;
-            ReadLineExt.Context.AutoCompletionHandler = new AutoCompleteHandler(Builtins);
-
-            jobBuiltIn.BackgroundReap();
             
-            string input = ReadLineExt.Read("$ ", string.Empty)!;
-            Token[] tokens = input.Tokenize();
-            if (tokens.Length == 0) continue;
-            // Split the input into command and arguments
-            Token command = tokens.First();
-            bool handled = false;
-            TextWriter output = Console.Out;
-            TextWriter error = Console.Error;
-            
-            // see if one of the tokens is a StandoutOutput redirect.
-            if (tokens.Any(t => t.Value is ">" or "1>" or ">>" or "1>>"))
+            try
             {
-                int standardRedirectIndex = Array.IndexOf(tokens, tokens.First(d=> d.Value is ">" or "1>" or ">>" or "1>>"));
-                string outputFileName = tokens[standardRedirectIndex+ 1].Value;
-                bool append = tokens[standardRedirectIndex].Value.Contains(">>");
-                output = new StreamWriter(outputFileName, append);
-                // remove the two tokens we just consumed
-                tokens = [.. tokens[..standardRedirectIndex], .. tokens[(standardRedirectIndex+2)..]];
+                jobBuiltIn.BackgroundReap(originalOutput);
+                string input = ReadLineExt.Read("$ ", string.Empty)!;
+                Pipeline pipeline = input.Tokenize();
+                await executor.ExecutePipeline(pipeline);
             }
-            
-            if (tokens.Any(t => t.Value is "2>" or "2>>"))
+            catch (Exception ex)
             {
-                int standardErrorRedirectIndex = Array.IndexOf(tokens, tokens.First(d=> d.Value is "2>" or "2>>"));
-                string errorFileName = tokens[standardErrorRedirectIndex+ 1].Value;
-                bool errorAppend = tokens[standardErrorRedirectIndex].Value.Contains(">>");
-                error = new StreamWriter(errorFileName, errorAppend);
-                // remove the two tokens we just consumed
-                tokens = [.. tokens[..standardErrorRedirectIndex], .. tokens[(standardErrorRedirectIndex+2)..]];
+                originalError.WriteLine(ex);
             }
-            
-            Console.SetOut(output);
-            Console.SetError(error);
-            
-            // try to process built in commands
-            foreach (IBuiltInCommand builtin in Builtins)
-            {
-                if (!builtin.CommandName.Equals(command.Value, StringComparison.InvariantCultureIgnoreCase)) continue;
-                builtin.Execute(tokens[1..]);
-                handled = true;
-                break;
-            }
-            if (!handled)
-            {
-                string? resolveFromPath = ExecutableHelpers.ResolveExecutableFromPath(command.Value);
-                if (resolveFromPath != null)
-                {
-                    bool backgroundExecute = (tokens.Last().Value is "&");
-                    
-                    // execute the executable with any provided arguments
-                    ProcessStartInfo startInfo = new () { FileName = command.ToString() };
-                    tokens[1..].ToList().ForEach(t => startInfo.ArgumentList.Add(t));
-                    if (backgroundExecute) startInfo.ArgumentList.RemoveAt(startInfo.ArgumentList.Count - 1);
-                    if (!backgroundExecute)
-                    { 
-                        startInfo.RedirectStandardOutput = true;
-                        startInfo.RedirectStandardError = true;  
-                    }
-                    startInfo.UseShellExecute = false;
-                    startInfo.CreateNoWindow = backgroundExecute;
-                    Process? process = Process.Start(startInfo);
-                    if (backgroundExecute)
-                    {
-                        jobBuiltIn.RegisterBackgroundJob(process, input);
-                    }
-                    else
-                    {
-                        process!.WaitForExit();
-                        output.Write(process.StandardOutput.ReadToEnd());
-                        error.Write(process.StandardError.ReadToEnd()); 
-                    }
-
-                }
-                else
-                {
-                    Console.WriteLine($"{command.Value}: command not found");
-                }
-            }
-            if (output != originalOutput)
-            {
-                output.Flush();
-                if (output is StreamWriter sw)
-                {
-                    sw.Close();
-                }
-                Console.SetOut(originalOutput);
-            }
-
-            if (error != originalError)
-            {
-                error.Flush();
-                if (error is StreamWriter errorStream)
-                {
-                    errorStream.Close();
-                }
-                Console.SetError(originalError);
-            }
+           
         }
         // ReSharper disable once FunctionNeverReturns
     }

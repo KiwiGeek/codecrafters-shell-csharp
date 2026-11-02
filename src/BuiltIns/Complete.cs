@@ -6,12 +6,12 @@ internal class Complete : IBuiltInCommand
 
     private Dictionary<string, string> _completions = [];
 
-    public void Execute(Token[] tokens)
+    public void Execute(Token[] tokens, CommandContext context)
     {
 
         if (tokens.Length == 0)
         {
-            Console.WriteLine("Nothing to do");
+            context.StandardOutput.WriteLine("Nothing to do");
         }
         else
         {
@@ -21,7 +21,7 @@ internal class Complete : IBuiltInCommand
                     // the -C flag needs two tokens following.
                     if (tokens.Count() != 3)
                     {
-                        Console.WriteLine("Wrong number of arguments");
+                        context.StandardOutput.WriteLine("Wrong number of arguments");
                     }
                     else
                     {
@@ -34,18 +34,18 @@ internal class Complete : IBuiltInCommand
                     // the -p flag needs a second token which is the command the completion script is for.
                     if (tokens.Count() == 1)
                     {
-                        Console.WriteLine("Need command name after -p");
+                        context.StandardOutput.WriteLine("Need command name after -p");
                     }
                     else
                     {
                         string commandToPrint = tokens.Skip(1).First();
                         if (_completions.TryGetValue(commandToPrint, out string? completionScriptToPrint))
                         {
-                            Console.WriteLine($"complete -C '{completionScriptToPrint}' {commandToPrint}");
+                            context.StandardOutput.WriteLine($"complete -C '{completionScriptToPrint}' {commandToPrint}");
                         }
                         else
                         {
-                            Console.WriteLine($"complete: {commandToPrint}: no completion specification");
+                            context.StandardOutput.WriteLine($"complete: {commandToPrint}: no completion specification");
                         }
                     }
 
@@ -53,7 +53,7 @@ internal class Complete : IBuiltInCommand
                 case "-r":
                     if (tokens.Count() == 1)
                     {
-                        Console.WriteLine("Need command name after -p");
+                        context.StandardOutput.WriteLine("Need command name after -p");
                     }
 
                     if (_completions.ContainsKey(tokens.Skip(1).First()))
@@ -62,7 +62,7 @@ internal class Complete : IBuiltInCommand
                     }
                     break;
                 default:
-                    Console.WriteLine("Unrecognized command");
+                    context.StandardOutput.WriteLine("Unrecognized command");
                     break;
             }
         }

@@ -13,8 +13,8 @@ internal class AutoCompleteHandler(IBuiltInCommand[] builtInCommands) : IAutoCom
         string lastWord = text[(text.LastIndexOf(' ')+1)..];
         
         // see if we have registered completions for the first token
-        Token[] tokens = text.Tokenize();
-        string command = tokens.First();
+        Token tokenCommand = text.Tokenize().First().Command;
+        string command = tokenCommand.Value;
         
         // get a reference to the completion builtin
         Complete completeBuiltIn = (Complete)Program.Builtins.Single(f => f.CommandName == "complete");

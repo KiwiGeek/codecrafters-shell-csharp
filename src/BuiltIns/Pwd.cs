@@ -4,8 +4,8 @@ internal class Pwd : IBuiltInCommand
 {
     public string CommandName => "pwd";
 
-    public void Execute(Token[] tokens)
+    public void Execute(Token[] tokens, CommandContext context)
     {
-        Console.WriteLine(Environment.CurrentDirectory);
+        context.StandardOutput.WriteLine(Environment.CurrentDirectory);
     }
 }

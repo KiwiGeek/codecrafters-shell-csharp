@@ -20,31 +20,19 @@ internal static class StringExtensions
     extension(string value)
     {
         
-        internal Token[] Tokenize()
+        internal Pipeline Tokenize()
         {
+            string rawInvocation = value;
+            List<PipelineStage> pipelineResult = [];
             
-            // we're going to use a finite state machine to tokenize the string
-            // the states are:
-            // 1) normal
-            // 2) inside single quote
-            // 3) End of token
-            // 4) End of input
-            // 5) Inside of Double quote
-            // 6) Next Character Literal
-            // 
-            // Normal reads the next character, and determines if it's a single quote. if it is, we transition to Inside single quote
-            // if it's whitespace, we transition to end of token.
-            // if it's anything else, we append the character to the end of the current StringBuilder, and then loop.
-            // if we're in end of token, we commit the token to the collection, move the pointer to the start of the whitespace after it, 
-            //   move back to the normal state, and loop.
-            // if we're in the inside single quote state, we read the next character. if it's another single quote, then we move on one character
-            //   and move back to the normal state. for anything else, we append the next character to the current token and loop.
+            // we're going to shortcut the background job process and look for a raw " &" at the end of the string
+            bool backgroundJob = false;
             
             TokenizerStateMachine stateMachine = TokenizerStateMachine.Normal;
             int index = 0;
             bool done = false;
             StringBuilder stringBuilder = new();
-            List<Token> results = new();
+            List<Token> pipelineStageResult = new();
 
             while (!done)
             {
@@ -69,6 +57,27 @@ internal static class StringExtensions
                         else if (nextChar.Equals('\''))
                         {
                             stateMachine = TokenizerStateMachine.InsideSingleQuote;
+                        }
+                        else if (nextChar.Equals('|'))
+                        {
+                            // we received a non-quoted PIPE, so we flush the existing pipeline stage 
+                            // to the result set and start a new pipeline stage
+                            string newPipelineStageString = stringBuilder.ToString();
+                            Token newPipelineStageToken = new(newPipelineStageString);
+                            if (!string.IsNullOrEmpty(newPipelineStageString))
+                            {
+                                pipelineStageResult.Add(newPipelineStageToken);
+                            }
+                            stringBuilder.Clear();
+                            pipelineResult.Add(new PipelineStage(pipelineStageResult.ToArray()));
+                            pipelineStageResult = new List<Token>();
+                        }
+                        else if (nextChar.Equals('&'))
+                        {    
+                            if (!string.IsNullOrWhiteSpace(value[(index + 1)..])) 
+                                throw new InvalidOperationException("Background operator must be at the end of the command.");
+                            backgroundJob = true;
+                            stateMachine = TokenizerStateMachine.EndOfInput;
                         }
                         else
                         {
@@ -111,7 +120,7 @@ internal static class StringExtensions
                         Token newToken = new(newString);
                         if (!string.IsNullOrEmpty(newString))
                         {
-                            results.Add(newToken);
+                            pipelineStageResult.Add(newToken);
                         }
                         stringBuilder.Clear();
                         stateMachine = TokenizerStateMachine.Normal;
@@ -121,7 +130,7 @@ internal static class StringExtensions
                         Token endOfInputNewToken = new(endOfInputNewString);
                         if (!string.IsNullOrEmpty(endOfInputNewString))
                         {
-                            results.Add(endOfInputNewToken);
+                            pipelineStageResult.Add(endOfInputNewToken);
                         }
                         done = true;
                         break;
@@ -152,7 +161,13 @@ internal static class StringExtensions
                         throw new InvalidOperationException("Unknown state");
                 }
             }
-            return results.ToArray();
+            
+            pipelineResult.Add(new PipelineStage(pipelineStageResult.ToArray()));
+            return new Pipeline(pipelineResult)
+            {
+                BackgroundJob = backgroundJob,
+                Invocation = rawInvocation
+            };
         }   
     }
 }

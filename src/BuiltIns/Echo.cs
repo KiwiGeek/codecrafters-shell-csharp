@@ -4,9 +4,9 @@ internal class Echo : IBuiltInCommand
 {
     public string CommandName => "echo";
 
-    public void Execute(Token[] tokens)
+    public void Execute(Token[] tokens, CommandContext context)
     {
-        Console.WriteLine(string.Join(" ", tokens.AsSpan()[..]));
+        context.StandardOutput.WriteLine(string.Join(" ", tokens.AsSpan()[..]));
     }
 
 }

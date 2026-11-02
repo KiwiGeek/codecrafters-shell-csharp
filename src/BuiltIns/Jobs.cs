@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace CodeCrafters.Shell.BuiltIns;
 
 public class Jobs : IBuiltInCommand
@@ -9,9 +7,10 @@ public class Jobs : IBuiltInCommand
     {
         public string Status { get; private set; }
         public string Command { get; private set; }
-        public int JobId { get; init; }
+        public string RawInvocation { get; set; }
+        public int JobId { get; }
         public int ProcessId { get; init; }
-        private Process Process { get; init; }
+        private Process Process { get; }
 
         public void CheckForDeadProcesses()
         {
@@ -19,23 +18,24 @@ public class Jobs : IBuiltInCommand
             if (Process.HasExited)
             {
                 Status = "Done";
-                Command = Command.Replace(" &", "");
+                RawInvocation = RawInvocation.Replace(" &", "");
             }
         }
         
-        internal JobInfo(int jobId, int processId, string command, string status, Process process) 
+        internal JobInfo(int jobId, int processId, string command, string status, Process process, string rawInvocation) 
         {
             JobId = jobId;
             ProcessId = processId;
             Command = command;
             Status = status;
             Process = process;
+            RawInvocation = rawInvocation;
         }
     }
 
     internal List<JobInfo> _jobs = [];
 
-    public void RegisterBackgroundJob(Process process, string command)
+    internal void RegisterBackgroundJob(string command, Process process, Pipeline pipeline, CommandContext context)
     {
         // find the lowest unused jobId > 0.
         int newId = 1;
@@ -49,14 +49,14 @@ public class Jobs : IBuiltInCommand
             }
             found = true;
         }
-        _jobs.Add(new JobInfo(newId, process.Id, command, "Running", process));
-        Console.WriteLine($"[{newId}] {process.Id}");
+        _jobs.Add(new JobInfo(newId, process.Id, command, "Running", process, pipeline.Invocation));
+        context.StandardOutput.WriteLine($"[{newId}] {process.Id}");
     }
     
     
     public string CommandName => "jobs";
 
-    public void Execute(Token[] tokens)
+    public void Execute(Token[] tokens, CommandContext context)
     {
         int highestSeqId = _jobs.OrderByDescending(f => f.JobId).FirstOrDefault()?.JobId ?? 0;
         int secondHighestSeqId = _jobs.Count<2 ? 0 : _jobs.OrderByDescending(f => f.JobId).Skip(1).First().JobId;
@@ -66,13 +66,18 @@ public class Jobs : IBuiltInCommand
             char marker = ' ';
             if (job.JobId == highestSeqId) marker = '+';
             else if (job.JobId == secondHighestSeqId) marker = '-';
-            Console.WriteLine($"[{job.JobId}]{marker}  {job.Status,-24}{job.Command}");
+            WriteStatusLine(job, marker, context.StandardOutput);
         }
 
         _jobs.RemoveAll(j => j.Status == "Done");
     }
 
-    public void BackgroundReap()
+    private void WriteStatusLine(JobInfo job, char marker, TextWriter output)
+    {
+        output.WriteLine($"[{job.JobId}]{marker}  {job.Status,-24}{job.RawInvocation}");
+    }
+
+    internal void BackgroundReap(TextWriter output)
     {
         int highestSeqId = _jobs.OrderByDescending(f => f.JobId).FirstOrDefault()?.JobId ?? 0;
         int secondHighestSeqId = _jobs.Count<2 ? 0 : _jobs.OrderByDescending(f => f.JobId).Skip(1).First().JobId;
@@ -84,9 +89,12 @@ public class Jobs : IBuiltInCommand
             else if (job.JobId == secondHighestSeqId) marker = '-';
             if (job.Status == "Done")
             {
-                Console.WriteLine($"[{job.JobId}]{marker}  {job.Status,-24}{job.Command}");
+                job.RawInvocation = job.RawInvocation.Replace(" &", "");
+                WriteStatusLine(job, marker, output);
             }
         }
         _jobs.RemoveAll(j => j.Status == "Done");
     }
+    
+    
 }

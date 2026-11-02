@@ -2,11 +2,11 @@
 
 internal class Cd : IBuiltInCommand
 {
-    public void Execute(Token[] tokens)
+    public void Execute(Token[] tokens, CommandContext context)
     {
         if (tokens.Length < 1)
         {
-            Console.WriteLine("Usage: cd <path>");
+            context.StandardOutput.WriteLine("Usage: cd <path>");
             return;
         }
         if (tokens.First().ToString() == "~") tokens[0] = new Token(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
@@ -16,7 +16,7 @@ internal class Cd : IBuiltInCommand
         }
         else
         {
-            Console.WriteLine($"cd: {tokens.First().Value}: No such file or directory");
+            context.StandardOutput.WriteLine($"cd: {tokens.First().Value}: No such file or directory");
         }
     }
 
